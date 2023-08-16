@@ -14,10 +14,13 @@ wall_filter = FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Walls
 # Create an instance of the Options class
 options = Options()
 
+def convert_to_px(lenght):
+    return lenght / 5
+
 # Loop through the collected walls and print their length, height and mark
 for wall in wall_filter:
+    edges = []
     mark_param = wall.LookupParameter('Mark').AsString()
-    print('Wall Mark: ', mark_param)
     
     # Get the geometry of the wall
     geometry = wall.get_Geometry(options)
@@ -36,5 +39,16 @@ for wall in wall_filter:
                     # Get the length of the edge
                     edge_length = edge.ApproximateLength * 304.8
                     
-                    # Print the length of the edge
-                    print(round(edge_length, 0))
+                    edge_length = convert_to_px(int(round(edge_length, 0)))
+                    
+                    edges.append(edge_length)
+                
+    for i in range(len(edges) / 2):
+        edges.pop()
+        
+    print('Wall Mark: ', mark_param)
+    
+    # Print the length of the edge
+    print(edges)
+    
+    
