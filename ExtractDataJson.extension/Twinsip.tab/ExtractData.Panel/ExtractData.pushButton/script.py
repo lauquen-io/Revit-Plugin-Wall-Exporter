@@ -3,12 +3,19 @@ clr.AddReference('RevitAPI')
 clr.AddReference('RevitAPIUI')
 
 import math
+import json
 
 from Autodesk.Revit.DB import FilteredElementCollector, BuiltInCategory, Options, Solid, XYZ
 from pyrevit import revit
 
+# Variable where the walls will be stored
+walls = []
+
 # Get the active document
 doc = revit.doc
+
+print(doc.Title)
+print(doc.PathName)
 
 # Define a filter to collect walls
 wall_filter = FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Walls).WhereElementIsNotElementType()
@@ -16,8 +23,15 @@ wall_filter = FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Walls
 # Create an instance of the Options class
 options = Options()
 
-def convert_to_px(lenght):
-    return lenght / 5
+def save_json(panel):
+    # Serializing json
+    json_data = json.dumps(panel, indent=2)
+    
+    path = doc.PathName[:-3] + 'json'
+    
+    # Writing to random_data.json
+    with open(path, "w") as walls_data:
+        walls_data.write(json_data)
 
 def get_angles(edges_dir_array):
     angles = []
@@ -29,7 +43,7 @@ def get_angles(edges_dir_array):
         dir2 = (edge2.AsCurve().GetEndPoint(1) - edge2.AsCurve().GetEndPoint(0)).Normalize()
         
         angle = dir1.AngleTo(dir2)
-        angles.append(round(angle))
+        angles.append(angle)
         
     edge1 = edges_dir_array[-1]
     edge2 = edges_dir_array[0]
@@ -38,23 +52,30 @@ def get_angles(edges_dir_array):
     dir2 = (edge2.AsCurve().GetEndPoint(1) - edge2.AsCurve().GetEndPoint(0)).Normalize()
     
     angle = dir1.AngleTo(dir2)
-    angles.append(round(angle))
+    angles.append(angle)
         
     return angles
 
 def get_vertices(edges, angles):
-    vertices = [{"x": 0, "y": 0}]
-    angle = 0
-    
-    for i in range(len(edges)):
-        x = edges[i] * math.cos(math.radians(angle))
-        y = edges[i] * math.sin(math.radians(angle))
-        prev = vertices[-1]
-        vertices.append({"x": round(prev["x"] + x), "y": round(prev["y"] + y)})
-        angle += angles[i]
-    
-    vertices.pop(0)
+    for i in range(1, len(angles)):
+        angles[i] += angles[i - 1]
         
+    vertices = [{"x": 0, "y": 0}, {"x": edges[0], "y": 0}]
+    
+    for i in range(1, len(edges) - 1):
+        angle = angles[i - 1]
+            
+        y_value = math.sin(angle) * edges[i]
+        x_value = math.cos(angle) * edges[i]
+        
+        prev_x = vertices[-1]["x"]
+        prev_y = vertices[-1]["y"]
+        
+        another_vertice = {"x": round(x_value + prev_x), "y": round(y_value + prev_y)}
+        
+        vertices.append(another_vertice)
+            
+    
     return vertices
         
 
@@ -84,9 +105,7 @@ for wall in wall_filter:
                     # Get the length of the edge
                     edge_length = edge.ApproximateLength * 304.8
                     
-                    edge_length = convert_to_px(int(round(edge_length, 0)))
-                    
-                    edges.append(edge_length)
+                    edges.append(round(edge_length))
                     
                     edges_dir_array.append(edge)
                 
@@ -102,6 +121,8 @@ for wall in wall_filter:
     dict = {'name': mark_param,
             'points': vertices}
     
-    print(dict)
+    walls.append(dict)
+    
+save_json(walls)
     
 
