@@ -2,6 +2,8 @@ import clr
 clr.AddReference('RevitAPI')
 clr.AddReference('RevitAPIUI')
 
+import math
+
 from Autodesk.Revit.DB import FilteredElementCollector, BuiltInCategory, Options, Solid, XYZ
 from pyrevit import revit
 
@@ -17,9 +19,52 @@ options = Options()
 def convert_to_px(lenght):
     return lenght / 5
 
+def get_angles(edges_dir_array):
+    angles = []
+    for i in range((len(edges_dir_array) - 1)):
+        edge1 = edges_dir_array[i]
+        edge2 = edges_dir_array[i + 1]
+        
+        dir1 = (edge1.AsCurve().GetEndPoint(1) - edge1.AsCurve().GetEndPoint(0)).Normalize()
+        dir2 = (edge2.AsCurve().GetEndPoint(1) - edge2.AsCurve().GetEndPoint(0)).Normalize()
+        
+        angle = dir1.AngleTo(dir2)
+        angles.append(round(angle))
+        
+    edge1 = edges_dir_array[-1]
+    edge2 = edges_dir_array[0]
+    
+    dir1 = (edge1.AsCurve().GetEndPoint(1) - edge1.AsCurve().GetEndPoint(0)).Normalize()
+    dir2 = (edge2.AsCurve().GetEndPoint(1) - edge2.AsCurve().GetEndPoint(0)).Normalize()
+    
+    angle = dir1.AngleTo(dir2)
+    angles.append(round(angle))
+        
+    return angles
+
+def get_vertices(edges, angles):
+    vertices = [{"x": 0, "y": 0}]
+    angle = 0
+    
+    for i in range(len(edges)):
+        x = edges[i] * math.cos(math.radians(angle))
+        y = edges[i] * math.sin(math.radians(angle))
+        prev = vertices[-1]
+        vertices.append({"x": round(prev["x"] + x), "y": round(prev["y"] + y)})
+        angle += angles[i]
+    
+    vertices.pop(0)
+        
+    return vertices
+        
+
 # Loop through the collected walls and print their length, height and mark
 for wall in wall_filter:
     edges = []
+    edges_dir_array = []
+    angles = []
+    vertices = []
+    
     mark_param = wall.LookupParameter('Mark').AsString()
     
     # Get the geometry of the wall
@@ -42,13 +87,21 @@ for wall in wall_filter:
                     edge_length = convert_to_px(int(round(edge_length, 0)))
                     
                     edges.append(edge_length)
+                    
+                    edges_dir_array.append(edge)
                 
     for i in range(len(edges) / 2):
         edges.pop()
-        
-    print('Wall Mark: ', mark_param)
+        edges_dir_array.pop()
     
-    # Print the length of the edge
-    print(edges)
+    angles = get_angles(edges_dir_array)
     
+    vertices = get_vertices(edges, angles)
     
+    # Final object to return
+    dict = {'name': mark_param,
+            'points': vertices}
+    
+    print(dict)
+    
+
