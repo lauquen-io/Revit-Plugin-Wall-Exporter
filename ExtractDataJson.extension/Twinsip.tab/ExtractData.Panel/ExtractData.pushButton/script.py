@@ -91,6 +91,8 @@ for wall in wall_filter:
     if mark_param and 'E' not in mark_param:
         # Get the geometry of the wall
         geometry = wall.get_Geometry(options)
+        
+        print(mark_param)
 
         # Loop through the geometry objects
         for obj in geometry:
@@ -114,15 +116,16 @@ for wall in wall_filter:
             edges.pop()
             edges_dir_array.pop()
             
-        angles = get_angles(edges_dir_array)
+        if len(edges_dir_array) != 0:
+            angles = get_angles(edges_dir_array)
 
-        vertices = get_vertices(edges, angles)
+            vertices = get_vertices(edges, angles)
 
-        # Final object to return
-        dict = {'name': mark_param,
-                'points': vertices}
+            # Final object to return
+            dict = {'name': mark_param,
+                    'points': vertices}
 
-        walls.append(dict)
+            walls.append(dict)
     
 save_json(walls)
 print('JSON file saved at: ', doc.PathName)
