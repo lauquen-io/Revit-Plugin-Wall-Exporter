@@ -14,9 +14,6 @@ walls = []
 # Get the active document
 doc = revit.doc
 
-print(doc.Title)
-print(doc.PathName)
-
 # Define a filter to collect walls
 wall_filter = FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Walls).WhereElementIsNotElementType()
 
@@ -25,7 +22,7 @@ options = Options()
 
 def save_json(panel):
     # Serializing json
-    json_data = json.dumps(panel, indent=2)
+    json_data = json.dumps(panel, indent=3)
     
     path = doc.PathName[:-3] + 'json'
     
@@ -77,8 +74,24 @@ def get_vertices(edges, angles):
             
     
     return vertices
-        
 
+def calculate_surface_area(points):
+    if len(points) < 3:
+        return 0
+
+    def shoelace_formula(x_coords, y_coords):
+        n = len(x_coords)
+        area = 0
+        for i in range(n):
+            j = (i + 1) % n
+            area += (x_coords[i] * y_coords[j]) - (y_coords[i] * x_coords[j])
+        return abs(area) / 2
+
+    x_coords = [point['x'] for point in points]
+    y_coords = [point['y'] for point in points]
+
+    return shoelace_formula(x_coords, y_coords) / 1000000
+        
 # Loop through the collected walls and print their length, height and mark
 for wall in wall_filter:
     edges = []
@@ -92,8 +105,6 @@ for wall in wall_filter:
         # Get the geometry of the wall
         geometry = wall.get_Geometry(options)
         
-        print(mark_param)
-
         # Loop through the geometry objects
         for obj in geometry:
             # Check if the object is a Solid
@@ -120,10 +131,15 @@ for wall in wall_filter:
             angles = get_angles(edges_dir_array)
 
             vertices = get_vertices(edges, angles)
+            
+            area = calculate_surface_area(vertices)
+            
+            print(area)
 
             # Final object to return
             dict = {'name': mark_param,
-                    'points': vertices}
+                    'points': vertices,
+                    'area': area}
 
             walls.append(dict)
     
