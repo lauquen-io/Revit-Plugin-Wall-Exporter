@@ -134,8 +134,6 @@ for wall in wall_filter:
             
             area = calculate_surface_area(vertices)
             
-            print(area)
-
             # Final object to return
             dict = {'name': mark_param,
                     'points': vertices,
