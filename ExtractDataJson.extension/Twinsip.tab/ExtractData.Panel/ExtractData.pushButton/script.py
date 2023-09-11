@@ -99,9 +99,9 @@ for wall in wall_filter:
     angles = []
     vertices = []
     
-    if type(wall) is not None:
+    try: 
         mark_param = wall.LookupParameter('Mark').AsString()
-        
+    
         if mark_param and 'E' not in mark_param:
             # Get the geometry of the wall
             geometry = wall.get_Geometry(options)
@@ -141,6 +141,8 @@ for wall in wall_filter:
                         'area': area}
 
                 walls.append(dict)
+    except:
+        pass
     
 save_json(walls)
 print('JSON file saved at: ', doc.PathName)
