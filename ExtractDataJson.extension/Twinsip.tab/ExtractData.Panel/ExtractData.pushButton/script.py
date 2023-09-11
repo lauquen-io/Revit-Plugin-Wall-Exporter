@@ -17,6 +17,8 @@ doc = revit.doc
 # Define a filter to collect walls
 wall_filter = FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Walls).WhereElementIsNotElementType()
 
+print(doc)
+
 # Create an instance of the Options class
 options = Options()
 
