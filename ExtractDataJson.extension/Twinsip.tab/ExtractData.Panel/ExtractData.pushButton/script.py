@@ -99,7 +99,7 @@ for wall in wall_filter:
     angles = []
     vertices = []
     
-    try: 
+    try:
         mark_param = wall.LookupParameter('Mark').AsString()
     
         if mark_param and 'E' not in mark_param:
@@ -141,8 +141,8 @@ for wall in wall_filter:
                         'area': area}
 
                 walls.append(dict)
-    except:
-        pass
+    except ValueError:
+        print(ValueError)
     
 save_json(walls)
 print('JSON file saved at: ', doc.PathName)
