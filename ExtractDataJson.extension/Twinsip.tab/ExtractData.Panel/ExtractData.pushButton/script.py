@@ -17,8 +17,6 @@ doc = revit.doc
 # Define a filter to collect walls
 wall_filter = FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Walls).WhereElementIsNotElementType()
 
-print(doc)
-
 # Create an instance of the Options class
 options = Options()
 
@@ -101,47 +99,48 @@ for wall in wall_filter:
     angles = []
     vertices = []
     
-    mark_param = wall.LookupParameter('Mark').AsString()
-    
-    if mark_param and 'E' not in mark_param:
-        # Get the geometry of the wall
-        geometry = wall.get_Geometry(options)
+    if type(wall) is not None:
+        mark_param = wall.LookupParameter('Mark').AsString()
         
-        # Loop through the geometry objects
-        for obj in geometry:
-            # Check if the object is a Solid
-            if isinstance(obj, Solid):
-                # Loop through the edges of the solid
-                for edge in obj.Edges:
-                    # Get the direction of the edge
-                    edge_dir = (edge.AsCurve().GetEndPoint(1) - edge.AsCurve().GetEndPoint(0)).Normalize()
-                    
-                    # Check if the edge direction is perpendicular to the wall's normal
-                    if abs(edge_dir.DotProduct(wall.Orientation)) < 0.001:
-                        # Get the length of the edge
-                        edge_length = edge.ApproximateLength * 304.8
+        if mark_param and 'E' not in mark_param:
+            # Get the geometry of the wall
+            geometry = wall.get_Geometry(options)
+            
+            # Loop through the geometry objects
+            for obj in geometry:
+                # Check if the object is a Solid
+                if isinstance(obj, Solid):
+                    # Loop through the edges of the solid
+                    for edge in obj.Edges:
+                        # Get the direction of the edge
+                        edge_dir = (edge.AsCurve().GetEndPoint(1) - edge.AsCurve().GetEndPoint(0)).Normalize()
                         
-                        edges.append(round(edge_length))
+                        # Check if the edge direction is perpendicular to the wall's normal
+                        if abs(edge_dir.DotProduct(wall.Orientation)) < 0.001:
+                            # Get the length of the edge
+                            edge_length = edge.ApproximateLength * 304.8
+                            
+                            edges.append(round(edge_length))
+                            
+                            edges_dir_array.append(edge)
                         
-                        edges_dir_array.append(edge)
-                    
-        for i in range(len(edges) / 2):
-            edges.pop()
-            edges_dir_array.pop()
-            
-        if len(edges_dir_array) != 0:
-            angles = get_angles(edges_dir_array)
+            for i in range(len(edges) / 2):
+                edges.pop()
+                edges_dir_array.pop()
+                
+            if len(edges_dir_array) != 0:
+                angles = get_angles(edges_dir_array)
 
-            vertices = get_vertices(edges, angles)
-            
-            area = calculate_surface_area(vertices)
-            
-            # Final object to return
-            dict = {'name': mark_param,
-                    'points': vertices,
-                    'area': area}
+                vertices = get_vertices(edges, angles)
+                
+                area = calculate_surface_area(vertices)
+                
+                # Final object to return
+                dict = {'name': mark_param,
+                        'points': vertices,
+                        'area': area}
 
-            walls.append(dict)
+                walls.append(dict)
     
 save_json(walls)
 print('JSON file saved at: ', doc.PathName)
