@@ -143,47 +143,47 @@ for wall in wall_filter:
 
                 walls.append(dict)
                 
-        elif mark_param and 'E' in mark_param:
-            # Get the geometry of the wall
-            geometry = wall.get_Geometry(options)
+    elif mark_param and 'E' in mark_param:
+        # Get the geometry of the wall
+        geometry = wall.get_Geometry(options)
+        
+        # Loop through the geometry objects
+        for obj in geometry:
+            # Check if the object is a Solid
+            if isinstance(obj, Solid):
+                # Loop through the edges of the solid
+                for edge in obj.Edges:
+                    # Get the direction of the edge
+                    edge_dir = (edge.AsCurve().GetEndPoint(1) - edge.AsCurve().GetEndPoint(0)).Normalize()
+                    
+                    # Check if the edge direction is perpendicular to the wall's normal
+                    if abs(edge_dir.DotProduct(wall.Orientation)) < 0.001:
+                        # Get the length of the edge
+                        edge_length = edge.ApproximateLength * 304.8
+                        
+                        edges.append(round(edge_length))
+                        
+                        edges_dir_array.append(edge)
+                    
+        for i in range(len(edges) / 2):
+            edges.pop()
+            edges_dir_array.pop()
             
-            # Loop through the geometry objects
-            for obj in geometry:
-                # Check if the object is a Solid
-                if isinstance(obj, Solid):
-                    # Loop through the edges of the solid
-                    for edge in obj.Edges:
-                        # Get the direction of the edge
-                        edge_dir = (edge.AsCurve().GetEndPoint(1) - edge.AsCurve().GetEndPoint(0)).Normalize()
-                        
-                        # Check if the edge direction is perpendicular to the wall's normal
-                        if abs(edge_dir.DotProduct(wall.Orientation)) < 0.001:
-                            # Get the length of the edge
-                            edge_length = edge.ApproximateLength * 304.8
-                            
-                            edges.append(round(edge_length))
-                            
-                            edges_dir_array.append(edge)
-                        
-            for i in range(len(edges) / 2):
-                edges.pop()
-                edges_dir_array.pop()
-                
-            edges.sort()
-                
-            if len(edges_dir_array) != 0:
-                # Final object to return
-                
-                angles = get_angles(edges_dir_array)
+        edges.sort()
+            
+        if len(edges_dir_array) != 0:
+            # Final object to return
+            
+            angles = get_angles(edges_dir_array)
 
-                vertices = get_vertices(edges, angles)
-                
-                dict = {'name': mark_param,
-                        'points': vertices,
-                        'height': edges[0],
-                        'length': edges[-1]} 
-                
-                screeds.append(dict)
+            vertices = get_vertices(edges, angles)
+            
+            dict = {'name': mark_param,
+                    'points': vertices,
+                    'height': edges[0],
+                    'length': edges[-1]} 
+            
+            screeds.append(dict)
                     
 file = {'recortes': walls,
         'enrases': screeds}
