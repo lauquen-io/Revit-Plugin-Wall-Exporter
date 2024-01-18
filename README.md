@@ -38,5 +38,3 @@ The script utilizes the Revit API and PyRevit library to collect wall geometry a
 After running the script, a JSON file is generated, providing a structured representation of the wall data. This file can be utilized in other applications according to the specific needs of your workflow.
 
 **Note:** Ensure that the 'Marca' parameter is appropriately set for walls to be included in the export.
-
-Feel free to customize and integrate this plugin into your Revit workflows as needed. If you encounter any issues or have suggestions for improvement, please contribute to the development of this plugin.
